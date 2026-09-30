@@ -1,0 +1,13 @@
+# Servicios locales opcionales para desarrollo (no obligatorios: Grafana
+# tambien puede usarse en su version Cloud gratuita, y Prefect corre local
+# con "prefect server start" sin necesidad de Docker).
+services:
+  grafana:
+    image: grafana/grafana-oss:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:

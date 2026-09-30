@@ -1,0 +1,21 @@
+# Datos: nunca se sube el dataset original ni derivados pesados
+data/**
+!data/**/.gitkeep
+
+# Entornos y credenciales
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Prefect / logs locales
+.prefect/
+*.log
+
+# Sistema
+.DS_Store
+Thumbs.db
