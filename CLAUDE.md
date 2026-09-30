@@ -291,7 +291,19 @@ Preparar diapositivas de respaldo técnicas (benchmark Dask completo, métricas 
 - [x] Datos descargados: 3 semanas de Troncal (~2 GB zip / ~9.6 GB CSV) + estaciones con lat/lon
 - [x] Columnas reales confirmadas (ver sección 3)
 - [x] Esqueleto del repositorio creado (`git init` local): notebooks, src/, sql/, .gitignore, README, requirements.txt
-- [ ] Crear repositorio remoto en GitHub (falta `gh auth login` del usuario) y primer push
+- [x] Repositorio remoto creado y con push: https://github.com/Juansanm21/transmilenio-perfiles-demanda (privado)
+- [x] Entorno virtual en `venv/` dentro del proyecto (no en `C:\envs`, para que quede junto al código)
+- [x] Notebook 01 con inventario real, diccionario y hallazgos de calidad
+- [x] Notebook 02 con limpieza, cruce geoespacial, EDA y tabla de features por estación — ver hallazgos clave abajo
 - [ ] Crear documento Google Docs (sin compartir con el profesor todavía, ver sección 9)
 - [ ] Cuenta AWS Academy: validar duración de sesión/Lab y si persiste RDS entre sesiones
-- [ ] Resto de fases según cronograma (EDA, Dask, clustering, Prefect, AWS, Grafana)
+- [ ] Notebook 03 (Dask), 04 (clustering), 05 (anomalías), Prefect, AWS, Grafana
+
+### Hallazgos clave del EDA (notebook 02), para citar en el documento final
+
+- **31.5 millones de validaciones reales procesadas**, agregadas a 60,119 filas estación-fecha-hora, sin pérdida (la suma coincide exacta antes y después de la limpieza).
+- **90.9% de las estaciones cruzan por código con el dataset geoespacial** (140/154); el resto son paraderos temporales por obras, corrales de bicicletas y 2 estaciones nuevas sin geolocalizar — documentado, no descartado a ciegas.
+- **El festivo (7 de agosto) se comporta como un domingo, no como un día hábil:** 525,834 validaciones vs. 516,447 del domingo de esa misma semana, frente a 1,856,994 de un día hábil promedio (3.5x más). Confirma la hipótesis H3.
+- **Concentración de demanda: Gini = 0.484**; las 15 estaciones de mayor demanda concentran el 37.8% del total (dominadas por portales/cabeceras de troncal). Apoya la hipótesis H1.
+- **Arquetipos visibles incluso antes del clustering formal:** estaciones con `razon_am_pm` alta (Tibanica-Primavera, Terreros, Tintal) = perfil residencial; con `razon_am_pm` baja (San Victorino, Museo del Oro, Virrey, Museo Nacional) = perfil de destino/comercio-cultura.
+- Mapa de calor geoespacial generado en `docs/mapa_calor_demanda.html`.
