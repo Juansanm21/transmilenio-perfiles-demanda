@@ -209,6 +209,8 @@ proyecto-transmilenio/
 ```
 Commits de los tres integrantes.
 
+**Identidad de git en este repo:** configurada localmente (no global) como `Juan Pablo Sánchez <juansanm21@gmail.com>`, porque el repositorio/usuario de GitHub es **Juansanm21**, distinto del correo de trabajo que usa git por defecto en esta máquina (`jpsanchez@skanhawk.com`). No usar el correo de trabajo en los commits de este proyecto.
+
 **Documento (Google Docs, normas IEEE):**
 1. Portada · 2. Resumen/Abstract · 3. Introducción y contexto · 4. Pregunta, objetivos e hipótesis · 5. Marco de referencia · 6. Metodología y arquitectura · 7. Una sección por fase CRISP-DM con resultados y evidencias · 8. Dask (configuraciones y benchmark) · 9. Prefect (diseño y evidencia) · 10. AWS (modelo de datos y evidencia) · 11. Grafana (dashboard y lectura gerencial) · 12. Conclusiones, recomendaciones, limitaciones y trabajo futuro · 13. Referencias IEEE · 14. Anexos (enlaces a repo y dashboard).
 
@@ -268,6 +270,7 @@ Preparar diapositivas de respaldo técnicas (benchmark Dask completo, métricas 
 - **Nunca** subir ni diseñar cargas del dataset original a AWS: solo tablas de resultados.
 - Nunca escribir credenciales reales en código ni en archivos versionados; usar `.env` y `.env.example`.
 - **Nunca compartir el Google Doc (ni ningún otro archivo del proyecto) con rodolfo.meza@gmail.com u otro correo del profesor sin que el usuario lo pida explícitamente en el momento.**
+- **Los commits de este repositorio NO deben llevar línea de coautoría de IA** (nada de "Co-Authored-By: Claude..." ni similar). El uso de IA en el proceso es visible y está bien, pero el historial de commits no debe leerse como si la IA hubiera hecho todo el trabajo.
 - Los tres integrantes tienen poco manejo técnico. Dividir el trabajo en tareas pequeñas y muy guiadas (una persona por notebook/sección, ver encabezados "Responsable sugerido" en cada notebook), y que los commits queden repartidos entre los tres para que se note el aporte de cada uno.
 - Priorizar código reproducible: scripts en `src/`, exploración en `notebooks/`, rutas relativas y parámetros configurables.
 - Cada paso importante debe dejar **evidencia** (capturas, tablas, logs) para el documento, porque la rúbrica la exige.
