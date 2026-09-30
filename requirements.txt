@@ -9,5 +9,7 @@ psycopg2-binary>=2.9
 python-dotenv>=1.0
 matplotlib>=3.8
 seaborn>=0.13
+folium>=0.16
+plotly>=5.20
 statsmodels>=0.14
 jupyter>=1.0

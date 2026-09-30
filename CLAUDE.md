@@ -48,7 +48,8 @@ Conjunto de datos **superior a 1.5 GB**, trabajado con metodología **CRISP-DM**
 - **3-9 agosto 2026**: incluye el festivo del 7 de agosto (Batalla de Boyacá). Se usa solo como caso de comparación puntual para la pregunta de hábil/fin de semana/festivo, no entra al set de entrenamiento del modelo principal.
 - Total: ~2 GB comprimido, ~9.6 GB en CSV estimado (evidencia de que supera 1.5 GB).
 - Estaciones (lat/lon): `data/raw/estaciones/`. Dos archivos por ahora (API de ArcGIS Hub `estaciones_troncales.csv`, 150 estaciones, y descarga desde la UI `estaciones_troncales_ui.csv`, 153 registros, columnas distintas) — unificar y elegir uno como canónico en el notebook 01.
-- **Columnas reales confirmadas** (Validación Troncal): `Acceso_Estacion, Day_Group_Type, Dispositivo, Emisor, Estacion_Parada, Fase, Fecha_Clearing, Fecha_Transaccion, Hora_Pico_SN, Linea, Nombre_Perfil, Numero_Tarjeta, Operador, Saldo_Previo_a_Transaccion, Saldo_Despues_Transaccion, Tipo_Tarifa, Tipo_Tarjeta, Valor`. No trae lat/lon (de ahí el cruce con estaciones). `Day_Group_Type` probablemente ya distingue hábil/sábado/domingo — confirmar si también marca festivo.
+- **Columnas reales confirmadas** (Validación Troncal, ver notebook 01 para el detalle completo): `Acceso_Estacion, Day_Group_Type, Dispositivo, Emisor, Estacion_Parada, Fase, Fecha_Clearing, Fecha_Transaccion, Hora_Pico_SN, ID_Vehiculo, Linea, Nombre_Perfil, Numero_Tarjeta, Operador, Ruta, Saldo_Previo_a_Transaccion, Saldo_Despues_Transaccion, Sistema, Tipo_Tarifa, Tipo_Tarjeta, Tipo_Vehiculo, Valor`. No trae lat/lon (de ahí el cruce con estaciones).
+- **Corrección importante sobre columnas que parecían útiles y no lo son:** `Day_Group_Type` y `Hora_Pico_SN` vienen **constantes** (siempre "Dia 1" y "Peak Time" respectivamente) en cada archivo diario — NO distinguen hábil/festivo ni hora pico como se asumía antes. Hay que derivar ambas cosas nosotros mismos a partir de `Fecha_Transaccion` (día de la semana + calendario propio de festivos; hora pico AM 5-9h / PM 16-20h). `ID_Vehiculo`, `Ruta`, `Tipo_Vehiculo` vienen 100% nulos (solo aplican a Zonal/Dual, se descartan). `Sistema` es constante "TRONCAL" (sin uso analítico). Los CSV deben leerse con `encoding='latin1'` (con la codificación por defecto las tildes/eñes se corrompen). Hay un pequeño "sangrado" de transacciones (~0.01-0.02%) entre archivos de días consecutivos cerca de medianoche — no son duplicados (verificado), pero al agregar hay que agrupar por la fecha real de `Fecha_Transaccion`, no por el archivo de origen. La clave para cruzar con el dataset de estaciones es el código de 5 dígitos al inicio de `Estacion_Parada` (ej. `"(05002) Tintal"`), no el nombre completo.
 
 ### Pregunta de estudio
 > **¿Qué perfiles de demanda presentan las estaciones del componente troncal de TransMilenio según sus patrones temporales de validaciones, y qué estaciones requieren prioridad en la gestión operativa durante las horas pico?**
@@ -58,9 +59,12 @@ Preguntas específicas:
 2. ¿Qué diferencias existen entre la demanda de días hábiles y la de fines de semana o festivos?
 3. ¿Qué grupos de estaciones con comportamiento similar se identifican a partir de sus curvas de demanda?
 4. ¿Qué estaciones y horarios muestran concentraciones de demanda o comportamientos atípicos que ameriten intervención operativa?
+5. **¿En qué estaciones y en qué franjas horarias de la semana se necesita personal de control de acceso/orden (evitar colados, organizar filas), para optimizar la contratación y los turnos en vez de tener personal fijo todo el día en todas las estaciones?**
 
-- **Usuario gerencial:** Secretaría de Movilidad / gerencia de operaciones de TransMilenio.
-- **Objetivo general:** identificar y caracterizar perfiles de demanda de las estaciones troncales mediante técnicas de big data y clustering, para apoyar la priorización de la gestión operativa en horas pico.
+> Motivación de la pregunta 5: en Bogotá hay personal (formal o informal, propio o de terceros) dedicado a esto en algunas estaciones, pero no está siempre ni en todas. El índice de prioridad operativa (Fase 4) se calcula a nivel estación-hora precisamente para responder esto: convertirlo en una recomendación de turnos (ej. "estación X necesita refuerzo de lunes a viernes de 6-9am y 5-7pm; estación Y solo sábados").
+
+- **Usuario gerencial:** Secretaría de Movilidad / gerencia de operaciones de TransMilenio — en particular, quien decide la contratación y los turnos de personal de control de acceso/orden en estaciones.
+- **Objetivo general:** identificar y caracterizar perfiles de demanda de las estaciones troncales mediante técnicas de big data y clustering, para apoyar la priorización de la gestión operativa en horas pico, incluyendo recomendaciones de dónde y cuándo reforzar personal.
 - **Unidad de análisis:** la estación troncal (tabla intermedia: estación–fecha–hora).
 - **Variable objetivo:** perfil/segmento de demanda de cada estación (resultado del clustering).
 - **Hipótesis:** las estaciones se agrupan en pocos perfiles (residenciales, destino laboral, transferencia/portales, baja demanda) y la presión en hora pico se concentra en un subconjunto pequeño de estaciones.
@@ -88,6 +92,7 @@ Contexto de saturación en hora pico, usuario, objetivos, unidad de análisis, h
    - Curva horaria general y por troncal (picos AM y PM).
    - Día hábil vs. fin de semana vs. festivo.
    - Heatmap estación × hora.
+   - **Mapa de calor geoespacial** de la demanda sobre la ciudad (lat/lon de cada estación, intensidad = validaciones), no solo un mapa de puntos por cluster. Es una de las razones por las que se eligió este dataset (poder cruzar con coordenadas). Herramienta sugerida en el notebook: `folium` o `plotly` (density_mapbox); en Grafana: panel Geomap con capa de calor además del de puntos por cluster.
    - Top 15 estaciones por demanda total y por demanda en hora pico.
    - Curva de Lorenz / índice de Gini de la demanda entre estaciones.
    - Si existe tipo de tarifa: participación de subsidios, adulto mayor y discapacidad.
@@ -124,7 +129,7 @@ Medir tiempo y uso de memoria de cada una. Guardar capturas del **dashboard de D
 ### Fase 4 — Modelado
 1. **Clustering de estaciones (principal):** StandardScaler → K-Means con k = 2…8; elegir k con codo + **silhouette**; validar con Davies-Bouldin; comparar con clustering jerárquico (dendrograma) y opcionalmente DBSCAN; visualizar con PCA 2D. Interpretar cada cluster con su curva horaria promedio y darle nombre de negocio.
 2. **Detección de anomalías (secundario):** Isolation Forest o desviación frente al patrón típico de cada estación por hora y tipo de día. Cruzar con eventos reales.
-3. **Índice de prioridad operativa (extra):** puntaje 0–100 por estación combinando demanda en pico, concentración y frecuencia de anomalías. Responde la segunda parte de la pregunta.
+3. **Índice de prioridad operativa (extra):** puntaje 0–100 por **estación-franja horaria** (no solo por estación) combinando demanda en pico, concentración y frecuencia de anomalías. Responde la pregunta 5: dónde y cuándo se necesita personal de control/orden. Salida pensada como recomendación de turnos por estación (ej. tabla estación × franja horaria × día de la semana → "requiere refuerzo sí/no"), no solo un ranking estático.
 4. **Pronóstico (opcional/trabajo futuro):** LightGBM por estación–hora, solo como prueba de concepto (dos semanas es poco).
 5. **Si hay ID de tarjeta (opcional):** segmentación de usuarios y aproximación origen-destino.
 
@@ -164,7 +169,7 @@ Seguridad: usuario de solo lectura para Grafana; credenciales en `.env` (nunca e
 ### Grafana (punto g)
 Conectado a RDS. Paneles:
 1. KPIs: validaciones totales, promedio diario, estación top, hora pico.
-2. **Geomap** de estaciones coloreadas por cluster, tamaño por demanda.
+2. **Geomap** de estaciones coloreadas por cluster, tamaño por demanda, **con capa de mapa de calor** de intensidad de demanda (no solo puntos) — filtrable por franja horaria.
 3. Curvas horarias promedio por cluster (panel clave).
 4. Top 10 estaciones por índice de prioridad.
 5. Heatmap estación × hora.
