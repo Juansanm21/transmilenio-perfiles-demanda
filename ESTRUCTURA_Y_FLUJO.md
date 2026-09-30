@@ -84,11 +84,13 @@ código corra igual. El detalle de qué días descargar está en `CLAUDE.md`.
 ## 4. Cómo correr el proyecto en tu computador
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 cp .env.example .env      # y pedirle a Juan Pablo las credenciales reales de AWS
 ```
+
+Cada integrante crea su propia carpeta `venv/` dentro del proyecto (no se sube a GitHub).
 
 Los notebooks se corren en orden (01 → 05). Si algo cambia en la forma de
 descargar los datos o en las carpetas, actualizar este archivo.

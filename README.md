@@ -39,11 +39,13 @@ Total: ~2 GB comprimido / ~9.6 GB en CSV — supera el mínimo de 1.5 GB pedido 
 ## Cómo ejecutar
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate       # Windows
+python -m venv venv
+venv\Scripts\activate       # Windows
 pip install -r requirements.txt
-cp .env.example .env         # y completar credenciales de AWS RDS
+cp .env.example .env        # y completar credenciales de AWS RDS
 ```
+
+La carpeta `venv/` queda dentro del proyecto (cada quien crea la suya, no se sube a GitHub — ver `.gitignore`).
 
 Los notebooks se ejecutan en orden (`01_...` a `05_...`). El flujo de Prefect está en `src/flows/pipeline_transmilenio.py`.
 
