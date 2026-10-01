@@ -333,6 +333,17 @@ El usuario encontró un plan de EDA más detallado en otra sesión (nunca llegó
 5. **Curvas de 5 estaciones representativas** (no las más grandes, 5 arquetipos distintos) superpuestas en un solo gráfico.
 6. **Puntos críticos por percentil propio de cada estación** (p95 de sus propias 24h, no mezclando estaciones): 294 combinaciones estación-hora, 146 de 150 estaciones tienen exactamente 2 (su pico AM y su pico PM) — confirma el patrón de doble pico como la norma.
 
+### Segunda restructuración del notebook 02 (1-oct, tras ver la figura por franja todavía con 14 días)
+
+El usuario señaló 3 problemas más: (1) el mapa por franja horaria seguía usando los 14 días típicos, no solo hábiles; (2) faltaba claridad sobre qué ventana de fechas usa cada sección; (3) la estructura era confusa (las "conclusiones" aparecían antes de más análisis) y el cierre era solo un gráfico básico.
+
+- **Mapa por franja horaria (2.9) reconstruido con solo los 10 días hábiles**, consistente con 2.8. El título de la figura ahora lo dice explícitamente ("SOLO días hábiles").
+- **Tabla de ventanas de fechas agregada en 2.1**: qué sección usa 21 días / 14 días típicos / solo hábiles / solo la semana del festivo, y por qué.
+- **Callout de "Objetivo + Datos usados" al inicio de cada sección** (2.2 a 2.10), para que no haya ambigüedad sobre qué pregunta responde cada una y con qué ventana de fechas.
+- **Reordenado:** la sección "2.13 Profundizando el EDA" (perfiles de usuario, Lorenz, heatmap, dispersión, curvas representativas, puntos críticos) pasó a ser **2.11**, ubicada ANTES de "2.12 Variables candidatas" (que incluye el resumen de hallazgos) — antes el orden era ilógico (conclusiones de variables antes de análisis que las sustentan).
+- **Conclusión final (ahora 2.13) sustancialmente más robusta**, ya no es solo un gráfico: agrega (a) una segunda mirada por zonas densas (La Campiña, Perdomo — demanda individual modesta pero zona comparable a un portal), (b) tabla de validación cruzada de las 3 hipótesis de `CLAUDE.md`, (c) tabla de qué sección responde cada una de las 5 preguntas específicas, (d) recomendación operativa final en prosa con limitaciones explícitas.
+- **Información de contexto adicional** (antes 2.11) pasó al final como apéndice (2.14).
+
 ### Restructuración final del notebook 02 (1-oct, pedido explícito del usuario)
 
 El usuario pidió 3 cosas: (1) quitar el ruido de "estaciones raras" (corrales de bicicletas, paraderos temporales) que venía apareciendo suelto en varias figuras, (2) rehacer la sección de atípicos/rigor estadístico usando **solo días hábiles** desde el inicio (evitar mezclar tipos de día y tener que explicar después por qué 24/26 candidatos eran falsos positivos), y (3) un **hilo conductor claro** que termine en una respuesta concreta: qué estaciones y horas necesitan personal de apoyo.
