@@ -333,6 +333,16 @@ El usuario encontró un plan de EDA más detallado en otra sesión (nunca llegó
 5. **Curvas de 5 estaciones representativas** (no las más grandes, 5 arquetipos distintos) superpuestas en un solo gráfico.
 6. **Puntos críticos por percentil propio de cada estación** (p95 de sus propias 24h, no mezclando estaciones): 294 combinaciones estación-hora, 146 de 150 estaciones tienen exactamente 2 (su pico AM y su pico PM) — confirma el patrón de doble pico como la norma.
 
+### Tercera restructuración del notebook 02 (1-oct): numeración plana tipo "pasos", igual al otro CLAUDE.md
+
+El usuario pidió abandonar el esquema "2.1, 2.2, 2.3..." (que no cuenta una historia) y usar una lista plana de pasos con títulos simples, como en el otro documento ("1. Calidad e inventario, 2. Volumen y concentración, 3. Patrón temporal..."). Se adoptó esa numeración y se reordenó el contenido real para que la secuencia tenga sentido narrativo:
+
+1. Contexto · 2. Construcción de la tabla base · 3. Calidad de datos · 4. Cruce geoespacial · 5. Patrón temporal del sistema · **6. Hábil vs. fin de semana vs. festivo** (movido antes, porque el paso 9 depende de esta distinción) · 7. Volumen y concentración (+ Lorenz, movida aquí desde "profundizando") · 8. Forma de la demanda por estación (+ heatmap, dispersión AM/PM, curvas representativas, movidas aquí) · 9. Series de tiempo: estacionariedad y descomposición · 10. Cómo se mueve la demanda en el espacio · 11. Puntos críticos estación-hora (antes enterrado en "2.11.6") · 12. Perfiles de usuario · 13. Variables candidatas para el modelo · 14. Conclusión final · 15. Apéndice.
+
+Se corrigió también un bug de referencias previo a esta sesión: una tabla decía que "puntos críticos" era la sección 2.12 (variables candidatas) cuando siempre fue 2.11.6 — ya apunta correctamente a la sección 11.
+
+**Regla para el futuro:** si se vuelve a reordenar el notebook, buscar todas las referencias cruzadas con el patrón `2\.(?:1[0-4]|[1-9])(?!\d)(?:\.\d+)?` (evita falsos positivos como el valor "2.07") antes de dar por terminado el cambio.
+
 ### Segunda restructuración del notebook 02 (1-oct, tras ver la figura por franja todavía con 14 días)
 
 El usuario señaló 3 problemas más: (1) el mapa por franja horaria seguía usando los 14 días típicos, no solo hábiles; (2) faltaba claridad sobre qué ventana de fechas usa cada sección; (3) la estructura era confusa (las "conclusiones" aparecían antes de más análisis) y el cierre era solo un gráfico básico.
