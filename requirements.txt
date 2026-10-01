@@ -13,3 +13,4 @@ folium>=0.16
 plotly>=5.20
 statsmodels>=0.14
 jupyter>=1.0
+scipy>=1.11
