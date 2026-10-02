@@ -133,11 +133,47 @@ Usar Dask en lectura, limpieza y agregación de los datos crudos. Comparar con `
 Medir tiempo y uso de memoria de cada una. Guardar capturas del **dashboard de Dask** (task stream, memoria por worker). Entregar tabla + gráfica comparativa y conclusión sobre paralelismo vs. memoria por worker.
 
 ### Fase 4 — Modelado
-1. **Clustering de estaciones (principal):** StandardScaler → K-Means con k = 2…8; elegir k con codo + **silhouette**; validar con Davies-Bouldin; comparar con clustering jerárquico (dendrograma) y opcionalmente DBSCAN; visualizar con PCA 2D. Interpretar cada cluster con su curva horaria promedio y darle nombre de negocio.
-2. **Detección de anomalías (secundario):** Isolation Forest o desviación frente al patrón típico de cada estación por hora y tipo de día. Cruzar con eventos reales.
-3. **Índice de prioridad operativa (extra):** puntaje 0–100 por **estación-franja horaria** (no solo por estación) combinando demanda en pico, concentración y frecuencia de anomalías. Responde la pregunta 5: dónde y cuándo se necesita personal de control/orden. Salida pensada como recomendación de turnos por estación (ej. tabla estación × franja horaria × día de la semana → "requiere refuerzo sí/no"), no solo un ranking estático.
+
+**Blueprint formal de dos niveles** (propuesto por un integrante del equipo el 1-oct, revisado y adoptado). Separa claramente medio (perfiles) de fin (prioridad), consistente con la pregunta de estudio reformulada (sección 3).
+
+#### Nivel 1: perfiles de demanda (unidad = estación, ~150)
+
+**Variable objetivo:** `perfil_demanda`, el cluster asignado (ej. residencial, destino laboral, portal, baja demanda).
+
+| Variable | Cálculo | Rol | Ya construida en |
+|---|---|---|---|
+| `curva_horaria_h00...h23` | % de la demanda diaria en cada hora (24 valores que suman 1) | Entra al clustering (principal) | `estacion_features.parquet` |
+| `razon_am_pm` | Validaciones pico AM ÷ pico PM | Entra al clustering | `estacion_features.parquet` |
+| `razon_finde_habil` | Promedio fin de semana ÷ promedio hábil | Entra al clustering | `estacion_features.parquet` |
+| `indice_concentracion_pico` | Hora máxima ÷ promedio horario | Entra al clustering | `estacion_features.parquet` |
+| `demanda_promedio_diaria` | Total ÷ número de días | Describe el cluster | Derivar de `demanda_total` (trivial) |
+| `pct_adulto_mayor`, `pct_anonymous` | % según `Nombre_Perfil` | Describe el cluster | `estacion_features.parquet` |
+
+**Nota:** `pct_pico_am` y `pct_pico_pm` NO entran (correlación -0.92 entre sí y con `razon_am_pm`, serían redundantes — ver notebook 02, paso 8).
+
+**Método:** StandardScaler → K-Means con k = 2…8; elegir k con codo + **silhouette**; validar con Davies-Bouldin; comparar con clustering jerárquico (dendrograma) y opcionalmente DBSCAN; visualizar con PCA 2D. Interpretar cada cluster con su curva horaria promedio y darle nombre de negocio.
+
+#### Nivel 2: prioridad de refuerzo (unidad = estación × tipo de día × hora)
+
+**Variable objetivo:** `indice_prioridad` (0–100) y su versión binaria `requiere_refuerzo` (sí/no).
+
+| Variable | Cálculo | Qué aporta | Ya construida en |
+|---|---|---|---|
+| `validaciones_promedio` | Promedio de validaciones en esa estación/tipo de día/hora | Presión absoluta | Agregar de `fact_demanda_estacion_hora.parquet` |
+| `ratio_vs_promedio_estacion` | Esa hora ÷ promedio horario de la estación | Pico relativo, aunque la estación sea pequeña | Misma lógica ya usada en notebook 02, paso 14 |
+| `es_hora_critica` | 1 si está en el percentil 95 o más de su propia estación | Marca sus horas más cargadas | `puntos_criticos_p95.csv` (literal) |
+| `demanda_zona_700m` | Validaciones propias + estaciones a <700m | Zonas donde coordinar varios puntos | `estacion_features.parquet` |
+| `variabilidad` | Desviación estándar entre repeticiones de esa misma hora | Si la demanda es predecible o no | Nueva — ver limitación abajo |
+| `perfil_demanda` | Viene del nivel 1 | Agrupa recomendaciones de turno por tipo de estación | Resultado del clustering |
+
+**Salida final:** tabla tipo *"Portal Américas: refuerzo de lunes a viernes de 5 a 8 a.m. (perfil residencial)"*.
+
+**Limitación importante, verificada con datos (1-oct):** con solo 2 semanas típicas, cada día de la semana (lunes, martes...) tiene **exactamente 2 observaciones** entre los 10 hábiles. Calcular `validaciones_promedio` y sobre todo `variabilidad` (desviación estándar) con n=2 por celda es poco confiable. **Decisión:** usar `tipo_dia` (hábil/sábado/domingo — 10/2/2 observaciones) como granularidad de día para el Nivel 2 en esta entrega, no día-de-semana específico. Día-de-semana específico y `variabilidad` quedan documentados como extensión/trabajo futuro si se consigue más historia.
+
+#### Otros modelos (secundarios)
+3. **Detección de anomalías:** Isolation Forest o desviación frente al patrón típico de cada estación por hora y tipo de día (el notebook 02, paso 9, ya dejó 1 atípico real identificado: 16-sep, 22-23h). Cruzar con eventos reales si se consiguen.
 4. **Pronóstico (opcional/trabajo futuro):** LightGBM por estación–hora, solo como prueba de concepto (dos semanas es poco).
-5. **Si hay ID de tarjeta (opcional):** segmentación de usuarios y aproximación origen-destino.
+5. **Si se usa `Numero_Tarjeta` (opcional, pesado):** segmentación de usuarios y aproximación origen-destino — requiere volver a la tabla sin agregar (fila por fila), no la tabla ya agregada. Evaluar si hay tiempo antes del 10-oct.
 
 ### Flujo con Prefect (punto d)
 Flow `pipeline_transmilenio` con tareas:
