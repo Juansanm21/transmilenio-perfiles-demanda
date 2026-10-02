@@ -53,23 +53,28 @@ Conjunto de datos **superior a 1.5 GB**, trabajado con metodología **CRISP-DM**
 - **Corrección de encoding (encontrada el 1-oct al revisar una figura):** el archivo es **UTF-8**, no latin1. Se verificó con los bytes crudos: `\xc3\xa9` es exactamente la codificación UTF-8 de "é" (confirmado con `ord()` en Python, sin depender de cómo lo muestra una terminal — eso fue justo lo que generó la confusión inicial). Usar `encoding='latin1'` corrompe cada tilde en 2 caracteres (ej. "América" → "AmÃ©rica"). Ya corregido en notebooks 01 y 02 y reconstruidos `fact_demanda_estacion_hora.parquet` y `estacion_features.parquet`. Si algo (CSV, figura) muestra nombres con `Ã` y no se ha regenerado después del 1-oct, es este bug — volver a ejecutar con `encoding='utf-8'`.
 
 ### Pregunta de estudio
-> **¿Qué perfiles de demanda presentan las estaciones del componente troncal de TransMilenio según sus patrones temporales de validaciones, y qué estaciones requieren prioridad en la gestión operativa durante las horas pico?**
+
+**Reformulada el 1-oct, a partir de la revisión de un integrante del equipo** (ver razones abajo). La pregunta anterior mezclaba dos objetivos (perfiles + prioridades) y usaba lenguaje de "control de acceso/evasión" que no se puede sostener con los datos (no hay forma de cuantificar colados con validaciones). La nueva pregunta deja un solo objetivo principal (prioridad de refuerzo por estación-día-hora) y usa los perfiles como medio, no como fin, con un argumento que sí se sostiene con los datos: medimos cuánta gente entra, dónde y cuándo, y eso justifica personal para **gestión de filas y aglomeraciones**, no control de evasión.
+
+> **¿En qué estaciones troncales de TransMilenio y en qué franjas horarias de la semana se concentra la presión de demanda que justifica asignar personal de apoyo para la gestión de filas y el orden, y qué perfiles de demanda permiten organizar esos turnos?**
 
 Preguntas específicas:
 1. ¿Cómo se distribuye la demanda entre estaciones, troncales y franjas horarias?
 2. ¿Qué diferencias existen entre la demanda de días hábiles y la de fines de semana o festivos?
-3. ¿Qué grupos de estaciones con comportamiento similar se identifican a partir de sus curvas de demanda?
+3. ¿Qué grupos de estaciones con comportamiento similar se identifican a partir de sus curvas de demanda? (medio, no fin: sirve para organizar los turnos por tipo de estación, ej. "las estaciones del perfil residencial necesitan refuerzo de 5 a 8 a.m.; las de destino laboral, de 4 a 7 p.m.")
 4. ¿Qué estaciones y horarios muestran concentraciones de demanda o comportamientos atípicos que ameriten intervención operativa?
-5. **¿En qué estaciones y en qué franjas horarias de la semana se necesita personal de control de acceso/orden (evitar colados, organizar filas), para optimizar la contratación y los turnos en vez de tener personal fijo todo el día en todas las estaciones?**
+5. **¿En qué estaciones y en qué franjas horarias de la semana se concentra la presión de demanda que justifica asignar personal de apoyo para gestión de filas y orden (no control de evasión — eso no se puede medir con estos datos)?**
 
-> Motivación de la pregunta 5: en Bogotá hay personal (formal o informal, propio o de terceros) dedicado a esto en algunas estaciones, pero no está siempre ni en todas. El índice de prioridad operativa (Fase 4) se calcula a nivel estación-hora precisamente para responder esto: convertirlo en una recomendación de turnos (ej. "estación X necesita refuerzo de lunes a viernes de 6-9am y 5-7pm; estación Y solo sábados").
+> Motivación de la pregunta 5: en Bogotá hay personal (formal o informal, propio o de terceros) dedicado a esto en algunas estaciones, pero no está siempre ni en todas. El índice de prioridad operativa (Fase 4) se calcula a nivel estación-hora precisamente para responder esto: convertirlo en una recomendación de turnos.
 
-- **Usuario gerencial:** Secretaría de Movilidad / gerencia de operaciones de TransMilenio — en particular, quien decide la contratación y los turnos de personal de control de acceso/orden en estaciones.
-- **Objetivo general:** identificar y caracterizar perfiles de demanda de las estaciones troncales mediante técnicas de big data y clustering, para apoyar la priorización de la gestión operativa en horas pico, incluyendo recomendaciones de dónde y cuándo reforzar personal.
-- **Unidad de análisis:** la estación troncal (tabla intermedia: estación–fecha–hora).
-- **Variable objetivo:** perfil/segmento de demanda de cada estación (resultado del clustering).
-- **Hipótesis:** las estaciones se agrupan en pocos perfiles (residenciales, destino laboral, transferencia/portales, baja demanda) y la presión en hora pico se concentra en un subconjunto pequeño de estaciones.
-- **Criterio de éxito:** clusters interpretables con silhouette razonable y un ranking claro de estaciones prioritarias.
+- **Usuario gerencial:** Secretaría de Movilidad / gerencia de operaciones de TransMilenio — en particular, quien decide la contratación y los turnos de personal de apoyo en estaciones.
+- **Objetivo general:** cuantificar la presión de demanda por estación-día-hora para priorizar dónde y cuándo asignar personal de apoyo (gestión de filas y orden), usando los perfiles de demanda (clustering) como herramienta para organizar esos turnos por tipo de estación.
+- **Unidad de análisis:** la combinación **estación × día × hora** (no solo la estación) — es la unidad que se prioriza y sobre la que se decide un turno.
+- **Variable objetivo principal:** **índice de prioridad de refuerzo** de cada combinación estación-día-hora (combina volumen de validaciones, concentración en el pico, y atipicidad). El perfil/cluster de demanda es una variable de apoyo (para agrupar estaciones con necesidades de turno similares), no la variable objetivo.
+- **Hipótesis:** las estaciones se agrupan en pocos perfiles (residenciales, destino laboral, transferencia/portales, baja demanda) y la presión en hora pico se concentra en un subconjunto pequeño de combinaciones estación-hora.
+- **Criterio de éxito:** un ranking estación-día-hora defendible con los datos (sin inferir evasión) y clusters interpretables que permitan agrupar recomendaciones de turno por tipo de estación.
+
+**Nota de lenguaje (aplica a todo el proyecto, documento y presentación):** nunca usar "control de acceso", "evasión" o "colados" como justificación — usar siempre "gestión de filas", "aglomeraciones" u "orden en el flujo de pasajeros". Ya corregido en el notebook 02 (1-oct).
 
 ---
 
@@ -183,7 +188,7 @@ Exportar el JSON del dashboard al repo.
 ### Fase 5 — Evaluación y conclusiones (punto h)
 - Responder cada pregunta específica con un dato concreto.
 - Evaluar clusters (métricas, estabilidad al cambiar k, sentido de negocio).
-- Recomendaciones gerenciales (ej.: refuerzo de flota en estaciones del cluster X de 5 a 7 a. m.; control de acceso en top 10 de prioridad).
+- Recomendaciones gerenciales (ej.: refuerzo de flota en estaciones del cluster X de 5 a 7 a. m.; personal de gestión de filas en el top 10 de prioridad).
 - Limitaciones: solo dos semanas, sin capacidad ni salidas, sin estacionalidad.
 - Trabajo futuro: más meses, pronóstico, matriz origen-destino, integración SITP.
 
@@ -280,6 +285,7 @@ Preparar diapositivas de respaldo técnicas (benchmark Dask completo, métricas 
 - Los tres integrantes tienen poco manejo técnico. Dividir el trabajo en tareas pequeñas y muy guiadas (una persona por notebook/sección, ver encabezados "Responsable sugerido" en cada notebook), y que los commits queden repartidos entre los tres para que se note el aporte de cada uno.
 - Priorizar código reproducible: scripts en `src/`, exploración en `notebooks/`, rutas relativas y parámetros configurables.
 - **El EDA (notebook 02) es la parte más importante del proyecto para el usuario, más que el modelo.** El clustering es el último paso; lo que de verdad se evalúa es qué tan bien justificado queda el conjunto de variables candidatas. Priorizar profundidad y rigor ahí (incluir `.head()` de los dataframes clave para que el equipo vea de qué se está hablando) antes de avanzar a Dask/clustering/Prefect/AWS.
+- **Nunca justificar nada con "control de acceso" ni "evasión"/"colados"** — no hay datos para sostenerlo. Siempre hablar de "gestión de filas", "aglomeraciones" u "orden en el flujo de pasajeros" (ver sección 3, nota de lenguaje del 1-oct). El perfil/cluster de demanda es una herramienta para organizar turnos, no el objetivo principal — el objetivo principal es la prioridad de refuerzo por estación-día-hora.
 - Cada paso importante debe dejar **evidencia** (capturas, tablas, logs) para el documento, porque la rúbrica la exige.
 - Al terminar una tarea, indicar qué punto de la rúbrica (a–l) queda cubierto.
 - Responder en español.
