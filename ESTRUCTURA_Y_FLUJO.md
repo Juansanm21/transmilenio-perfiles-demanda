@@ -26,8 +26,7 @@ Proyecto Final/
 │   ├── 01_entendimiento_datos.ipynb
 │   ├── 02_eda.ipynb
 │   ├── 03_benchmark_dask.ipynb
-│   ├── 04_clustering.ipynb
-│   └── 05_anomalias.ipynb
+│   └── 04_modelado_y_priorizacion.ipynb
 │
 ├── src/                     # el mismo código, reutilizable (no duplicar en cada notebook)
 │   ├── features.py             # construye las variables por estación
@@ -55,15 +54,14 @@ código corra igual. El detalle de qué días descargar está en `CLAUDE.md`.
 | # | Paso | Dónde vive | Estado |
 |---|------|-----------|--------|
 | 1 | Descargar ZIPs diarios de TransMilenio + estaciones | `data/raw/` | ✅ Hecho |
-| 2 | Inventario: columnas reales, tamaño, tipos de dato | `notebooks/01_entendimiento_datos.ipynb` | ⏳ Siguiente |
-| 3 | Limpieza, cruce con estaciones, construir features por estación | `notebooks/02_eda.ipynb` | ⏳ Pendiente |
-| 4 | Repetir el punto 3 con Dask, 2+ configuraciones, medir tiempo/memoria | `notebooks/03_benchmark_dask.ipynb` | ⏳ Pendiente |
-| 5 | Modelo: agrupar estaciones por perfil de demanda | `notebooks/04_clustering.ipynb` | ⏳ Pendiente |
-| 6 | Detectar estaciones/horas atípicas | `notebooks/05_anomalias.ipynb` | ⏳ Pendiente |
-| 7 | Empaquetar los pasos 2-6 en un flujo que se repita solo con datos nuevos | `src/flows/pipeline_transmilenio.py` | ⏳ Pendiente |
-| 8 | Subir solo los resultados (nunca el dato crudo) a una base de datos en AWS | `sql/schema.sql`, `src/db.py` | ⏳ Pendiente |
-| 9 | Dashboard gerencial conectado a esa base | `grafana/` | ⏳ Pendiente |
-| 10 | Documento final con evidencia de cada paso | Google Docs (por crear) | ⏳ Pendiente |
+| 2 | Inventario: columnas reales, tamaño, tipos de dato | `notebooks/01_entendimiento_datos.ipynb` | ✅ Hecho |
+| 3 | Limpieza, cruce con estaciones, EDA y variables por estación | `notebooks/02_eda.ipynb` | ✅ Hecho |
+| 4 | Repetir el procesamiento con Dask, 2+ configuraciones, medir tiempo/memoria | `notebooks/03_benchmark_dask.ipynb` | ⏳ Siguiente |
+| 5 | Modelo: perfiles de demanda + prioridad de refuerzo + anomalías | `notebooks/04_modelado_y_priorizacion.ipynb` | ⏳ Pendiente |
+| 6 | Empaquetar los pasos 3-5 en un flujo que se repita solo con datos nuevos | `src/flows/pipeline_transmilenio.py` | ⏳ Pendiente |
+| 7 | Subir solo los resultados (nunca el dato crudo) a una base de datos en AWS | `sql/schema.sql`, `src/db.py` | ⏳ Pendiente |
+| 8 | Dashboard gerencial conectado a esa base | `grafana/` | ⏳ Pendiente |
+| 9 | Documento final con evidencia de cada paso | Google Docs (por crear) | ⏳ Pendiente |
 
 ---
 
@@ -92,5 +90,5 @@ cp .env.example .env      # y pedirle a Juan Pablo las credenciales reales de AW
 
 Cada integrante crea su propia carpeta `venv/` dentro del proyecto (no se sube a GitHub).
 
-Los notebooks se corren en orden (01 → 05). Si algo cambia en la forma de
+Los notebooks se corren en orden (01 a 04). Si algo cambia en la forma de
 descargar los datos o en las carpetas, actualizar este archivo.

@@ -47,7 +47,7 @@ cp .env.example .env        # y completar credenciales de AWS RDS
 
 La carpeta `venv/` queda dentro del proyecto (cada quien crea la suya, no se sube a GitHub — ver `.gitignore`).
 
-Los notebooks se ejecutan en orden (`01_...` a `05_...`). El flujo de Prefect está en `src/flows/pipeline_transmilenio.py`.
+Los notebooks se ejecutan en orden (`01_...` a `04_...`). El flujo de Prefect está en `src/flows/pipeline_transmilenio.py`.
 
 ## Equipo
 

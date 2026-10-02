@@ -171,7 +171,7 @@ Medir tiempo y uso de memoria de cada una. Guardar capturas del **dashboard de D
 **Limitación importante, verificada con datos (1-oct):** con solo 2 semanas típicas, cada día de la semana (lunes, martes...) tiene **exactamente 2 observaciones** entre los 10 hábiles. Calcular `validaciones_promedio` y sobre todo `variabilidad` (desviación estándar) con n=2 por celda es poco confiable. **Decisión:** usar `tipo_dia` (hábil/sábado/domingo — 10/2/2 observaciones) como granularidad de día para el Nivel 2 en esta entrega, no día-de-semana específico. Día-de-semana específico y `variabilidad` quedan documentados como extensión/trabajo futuro si se consigue más historia.
 
 #### Otros modelos (secundarios)
-3. **Detección de anomalías:** Isolation Forest o desviación frente al patrón típico de cada estación por hora y tipo de día (el notebook 02, paso 9, ya dejó 1 atípico real identificado: 16-sep, 22-23h). Cruzar con eventos reales si se consiguen.
+3. **Detección de anomalías (sección 4.7 del notebook 04, sin notebook aparte):** Isolation Forest o desviación frente al patrón típico de cada estación por hora y tipo de día (el notebook 02, paso 9, ya dejó 1 atípico real identificado: 16-sep, 22-23h). Cruzar con eventos reales si se consiguen.
 4. **Pronóstico (opcional/trabajo futuro):** LightGBM por estación–hora, solo como prueba de concepto (dos semanas es poco).
 5. **Si se usa `Numero_Tarjeta` (opcional, pesado):** segmentación de usuarios y aproximación origen-destino — requiere volver a la tabla sin agregar (fila por fila), no la tabla ya agregada. Evaluar si hay tiempo antes del 10-oct.
 
@@ -243,8 +243,7 @@ proyecto-transmilenio/
 │   ├── 01_entendimiento_datos.ipynb
 │   ├── 02_eda.ipynb
 │   ├── 03_benchmark_dask.ipynb
-│   ├── 04_clustering.ipynb
-│   └── 05_anomalias.ipynb
+│   └── 04_modelado_y_priorizacion.ipynb   # clustering + prioridad + anomalías (no hay notebook 05)
 ├── src/
 │   ├── flows/pipeline_transmilenio.py
 │   ├── tasks/
@@ -341,7 +340,8 @@ Preparar diapositivas de respaldo técnicas (benchmark Dask completo, métricas 
 - [x] Notebook 02 con limpieza, cruce geoespacial, EDA y tabla de features por estación — ver hallazgos clave abajo
 - [ ] Crear documento Google Docs (sin compartir con el profesor todavía, ver sección 9)
 - [ ] Cuenta AWS Academy: validar duración de sesión/Lab y si persiste RDS entre sesiones
-- [ ] Notebook 03 (Dask), 04 (clustering), 05 (anomalías), Prefect, AWS, Grafana
+- [ ] Notebook 03 (Dask), notebook 04 (clustering + prioridad + anomalías), Prefect, AWS, Grafana
+- **Notebooks definitivos: 01, 02, 03 y 04.** Se descartó el notebook 05 (2-oct): la detección exploratoria de atípicos ya está en el notebook 02 (pasos 9 y 11) y la versión formal es la sección 4.7 del notebook 04 / una función en `src/` que Prefect reutiliza.
 
 ### Hallazgos clave del EDA (notebook 02), para citar en el documento final
 
@@ -360,7 +360,7 @@ Preparar diapositivas de respaldo técnicas (benchmark Dask completo, métricas 
 - **Matriz de correlación de las features candidatas:** `pct_pico_am` y `pct_pico_pm` están correlacionadas -0.92 (redundantes entre sí y con `razon_am_pm`). Se descartan las dos primeras del modelo; quedan `demanda_total`, `razon_am_pm`, `razon_finde_habil`, `indice_concentracion_pico` y la curva horaria normalizada completa, justificadas una por una en la sección 2.12 del notebook ("Variables candidatas para el modelo").
 - **Recalibración de prioridades (pedido explícito del usuario):** el clustering es "lo último" — lo que de verdad importa es llegar a un EDA fuerte que proponga y justifique las variables del modelo, no apurar el modelo en sí. El notebook 02 ya cierra con una sección de conclusiones del EDA + variables candidatas, antes de tocar Dask o el clustering.
 - **Por qué el mapa general (folium) muestra un punto caliente que nunca aparece como el más intenso en el mapa por franja horaria (duda real del usuario, resuelta):** `folium.HeatMap` difumina y SUMA círculos superpuestos; varias estaciones cercanas con demanda media-alta (ej. San Victorino + 4 vecinas a <700m en el centro, suma 733,829) generan un brillo combinado mayor que un portal aislado con más demanda individual pero sin vecinos cerca. El mapa por franja colorea cada estación por su propio valor, sin sumar vecinas, por eso nunca coincide. Se agregó `demanda_zona_700m` como variable candidata adicional (demanda propia + de estaciones a <700m), porque responde directo a la pregunta de estudio: hay zonas (no solo estaciones individuales) que acumulan presión y necesitarían coordinar varios puntos de refuerzo.
-- **Ranking de días (pedido explícito del usuario):** entre los 10 hábiles típicos hay ~10% de variación real (no ruido). El día más cargado de todos (16-sep) coincide con el único atípico real detectado en el boxplot (pico nocturno 10-11pm) — posible mismo evento, hipótesis para el notebook 05.
+- **Ranking de días (pedido explícito del usuario):** entre los 10 hábiles típicos hay ~10% de variación real (no ruido). El día más cargado de todos (16-sep) coincide con el único atípico real detectado en el boxplot (pico nocturno 10-11pm) — posible mismo evento, hipótesis para la sección 4.7 (anomalías) del notebook 04.
 - **Agosto vs. septiembre, probado con estadística, no solo mirado (pedido explícito del usuario):** t-test independiente, diferencia de medias 3.3%, **p=0.030 (sí es significativo)**. Pero esto NO prueba estacionalidad: los 5 días de cada semana no son observaciones independientes del mes, son 5 días de UNA sola semana (pseudo-replicación) — un efecto puntual de esa semana se repite en los 5 días e infla la "muestra" artificialmente. Para probar estacionalidad real haría falta comparar varias semanas de cada mes, de años distintos. Gráfica real en `docs/figs/agosto_vs_septiembre_habiles.png`.
 - **Tabla explícita de validaciones por franja horaria (top 20 estaciones)**, pedida por el usuario para complementar el mapa visual — `data/processed/demanda_por_franja_top20.csv`. Permitió resolver una segunda duda real: **Calle 100-Marketmedios** no es un caso de "vecinas sumando brillo" (solo tiene 1 vecina a <700m) sino de **concentración temporal pura**: 317 validaciones en madrugada, pero 236,194 en pico PM — la cifra más alta de las 20 estaciones en esa franja específica (más que Portal Norte). Es una estación "especialista en salida de tarde" (perfil oficinas/comercio), no "generalista" como los portales.
 
