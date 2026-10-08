@@ -1,0 +1,15 @@
+problema,dónde,a cuánto afecta,decisión
+Columnas 100 % vacías,"Ruta, ID_Vehiculo, Tipo_Vehiculo",100 % de las filas,No se usan al analizar (se conservan en el consolidado)
+Columnas con un solo valor,"Fase, Hora_Pico_SN, Operador, Sistema",todas las filas,No se usan; la hora pico se define desde la hora de la validación
+Day_Group_Type solo distingue domingos,Day_Group_Type,5.22 % de las filas son 'Dia 2',"El tipo de día (hábil, sábado, domingo, festivo) se construye desde la fecha"
+Valores faltantes en Linea,Linea,"2,438 filas (0.008 %)",Se dejan como 'sin línea'
+Fecha guardada como texto,Fecha_Transaccion,todas las filas,"Convertir a fecha-hora; extraer fecha, hora y día de la semana"
+Colas de medianoche (días incompletos),"2026-08-17, 2026-09-13, 2026-09-21",325 filas,Excluir de los promedios por tipo de día
+Validaciones en el archivo de otro día,Fecha_Clearing vs Fecha_Transaccion,"2,830 filas (0.009 %)","Usar la fecha real de la validación, no la del archivo"
+Código y nombre de estación pegados,Estacion_Parada,todas las filas,Separar en código de 5 dígitos y nombre
+Un código con dos nombres,09110,"187,604 filas",Contar por código y usar el nombre más frecuente
+Estaciones sin coordenadas,"17 estaciones (temporales, corrales, ampliaciones)","2,600,589 filas (8.25 %)",Se usan en la demanda; fuera del análisis geográfico (o ubicarlas a mano)
+Dos archivos de estaciones,estaciones_troncales.csv y _ui.csv,el archivo 2 no agrega estaciones,Usar el archivo 1 (trae la troncal)
+Perfil y tipo de tarjeta repiten información,Nombre_Perfil y Tipo_Tarjeta,'Anonymous' = 'tullave Básica' (29.85 % de las filas),Usar una sola de las dos para identificar la tarjeta anónima
+Valor = 0,Valor,"4,377,978 filas (13.885 %)",NO se descartan: se exploran (¿transbordos? ¿pasajes gratuitos?)
+Saldo previo = 0,Saldo_Previo_a_Transaccion,"1,660,336 filas (5.266 %)",NO se descartan: se exploran

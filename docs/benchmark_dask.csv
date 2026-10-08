@@ -1,0 +1,5 @@
+método,workers,hilos,memoria_por_worker,estado,minutos,veces_más_rápido,pico_memoria_GB,parquet_GB,filas,mismas_filas_que_pandas
+pandas (1 proceso),1,1,sin límite,ok,5.291,1.0,1.111,1.266,31530646,True
+Dask A,2,1,2GB,ok,2.199,2.407,1.891,1.266,31530646,True
+Dask B,4,1,2GB,ok,1.68,3.149,2.854,1.266,31530646,True
+Dask C,8,1,1500MB,ok,1.536,3.446,4.618,1.266,31530646,True
