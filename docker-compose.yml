@@ -1,0 +1,27 @@
+# Grafana local conectado al RDS (solo lectura). Los datos de conexión salen de .env (no se suben a GitHub).
+#   docker compose up -d      -> http://localhost:3000   (el dashboard abre directo; usuario admin / contraseña GRAFANA_ADMIN_PASSWORD o "admin")
+services:
+  grafana:
+    image: grafana/grafana-oss:13.0.2
+    container_name: transmilenio-grafana
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /etc/grafana/dashboards/dashboard.json
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE:-require}
+      DB_READONLY_USER: ${DB_READONLY_USER}
+      DB_READONLY_PASSWORD: ${DB_READONLY_PASSWORD}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboard.json:/etc/grafana/dashboards/dashboard.json:ro
+      - grafana-data:/var/lib/grafana
+
+volumes:
+  grafana-data:

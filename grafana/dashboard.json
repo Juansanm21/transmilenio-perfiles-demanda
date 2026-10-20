@@ -1,0 +1,785 @@
+{
+  "uid": "transmilenio-refuerzo",
+  "title": "Refuerzo de personal en la troncal de TransMilenio",
+  "tags": [
+    "transmilenio",
+    "big data"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "",
+  "time": {
+    "from": "2026-07-30T00:00:00.000Z",
+    "to": "2026-09-24T00:00:00.000Z"
+  },
+  "description": "Qué estaciones de la troncal necesitan más personal de apoyo para ordenar el ingreso, en qué franjas y con qué ventana de refuerzo. Fuente: tabla analisis_estacion_hora (AWS RDS), cargada por el flujo de Prefect.",
+  "templating": {
+    "list": [
+      {
+        "name": "semana",
+        "label": "Semana (lunes)",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "rds-transmilenio"
+        },
+        "refresh": 1,
+        "sort": 0,
+        "multi": false,
+        "includeAll": false,
+        "query": "SELECT DISTINCT semana_inicio::text AS __text, semana_inicio::text AS __value FROM analisis_estacion_hora ORDER BY 1 DESC",
+        "definition": "SELECT DISTINCT semana_inicio::text AS __text, semana_inicio::text AS __value FROM analisis_estacion_hora ORDER BY 1 DESC"
+      },
+      {
+        "name": "franja",
+        "label": "Franja",
+        "type": "custom",
+        "query": "mañana,tarde",
+        "multi": false,
+        "includeAll": false,
+        "current": {
+          "selected": true,
+          "text": "mañana",
+          "value": "mañana"
+        },
+        "options": [
+          {
+            "selected": true,
+            "text": "mañana",
+            "value": "mañana"
+          },
+          {
+            "selected": false,
+            "text": "tarde",
+            "value": "tarde"
+          }
+        ]
+      },
+      {
+        "name": "estacion",
+        "label": "Estación (perfil horario)",
+        "type": "query",
+        "datasource": {
+          "type": "grafana-postgresql-datasource",
+          "uid": "rds-transmilenio"
+        },
+        "refresh": 1,
+        "sort": 1,
+        "multi": false,
+        "includeAll": false,
+        "query": "SELECT DISTINCT nombre_estacion AS __text, nombre_estacion AS __value FROM analisis_estacion_hora WHERE nombre_estacion IS NOT NULL ORDER BY 1",
+        "definition": "SELECT DISTINCT nombre_estacion AS __text, nombre_estacion AS __value FROM analisis_estacion_hora WHERE nombre_estacion IS NOT NULL ORDER BY 1",
+        "current": {
+          "selected": true,
+          "text": "Portal Américas",
+          "value": "Portal Américas"
+        }
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Estaciones en alta presión",
+      "description": "Estaciones cuyo pico de la franja llega al umbral de 1.000 validaciones por hora.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT COUNT(DISTINCT cod_estacion) AS valor FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Pico máximo (validaciones por hora)",
+      "description": "Hora más cargada de la franja, promedio de los días hábiles de la semana.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT MAX(pico_franja) AS valor FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Personas de apoyo en el pico (todas las estaciones)",
+      "description": "Suma de personas simultáneas en el pico de cada estación (pico / 1.500 por persona, hacia arriba).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(p) AS valor FROM (SELECT MAX(personas_pico) AS p FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL GROUP BY cod_estacion) s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "green"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Carga sobre el umbral (validaciones por día)",
+      "description": "Suma, hora a hora, de lo que cada estación excede 1.000 validaciones por hora dentro de la franja.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 0,
+        "w": 6,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT SUM(c) AS valor FROM (SELECT MAX(carga_sobre_umbral) AS c FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL GROUP BY cod_estacion) s"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "purple"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "textMode": "value",
+        "justifyMode": "center"
+      }
+    },
+    {
+      "id": 5,
+      "type": "table",
+      "title": "Ranking de estaciones: dónde y cuándo reforzar",
+      "description": "Ordenado por carga sobre el umbral de la franja elegida. La ventana son las horas con al menos 50 % del pico de la estación.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 4,
+        "w": 14,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT puesto AS \"Puesto\", nombre_estacion AS \"Estación\", troncal AS \"Troncal\",\n       MAX(pico_franja) AS \"Pico (val/h)\", MAX(hora_pico) AS \"Hora pico\",\n       MAX(carga_sobre_umbral) AS \"Carga sobre umbral\", MAX(personas_pico) AS \"Personas en el pico\",\n       (MIN(hora) FILTER (WHERE en_ventana_refuerzo))::text || ':00 - ' || (MAX(hora) FILTER (WHERE en_ventana_refuerzo) + 1)::text || ':00' AS \"Ventana de refuerzo\"\nFROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL\nGROUP BY puesto, nombre_estacion, troncal ORDER BY puesto"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Carga sobre umbral"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic"
+                }
+              },
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "orange"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Pico (val/h)"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "locale"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Puesto"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 70
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Hora pico"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 90
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 6,
+      "type": "barchart",
+      "title": "Las 15 estaciones con más carga sobre el umbral",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 14,
+        "y": 4,
+        "w": 10,
+        "h": 12
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT nombre_estacion AS \"Estación\", MAX(carga_sobre_umbral) AS \"Carga sobre el umbral\"\nFROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL\nGROUP BY nombre_estacion ORDER BY 2 DESC LIMIT 15"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "orange"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0
+          },
+          "unit": "locale"
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "horizontal",
+        "xField": "Estación",
+        "legend": {
+          "showLegend": false
+        },
+        "showValue": "auto",
+        "barWidth": 0.8,
+        "groupWidth": 0.8,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelMaxLength": 28
+      }
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Demanda por hora de las 20 estaciones con más carga (promedio de un día hábil)",
+      "description": "Validaciones por hora; más rojo es más demanda. Las celdas que superan 1.000 son las horas de alta presión.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 24,
+        "h": 11
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "WITH top AS (SELECT cod_estacion, MAX(carga_sobre_umbral) AS c FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL GROUP BY cod_estacion ORDER BY 2 DESC LIMIT 20)\nSELECT a.nombre_estacion AS \"Estación\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 4)) AS \"4 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 5)) AS \"5 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 6)) AS \"6 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 7)) AS \"7 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 8)) AS \"8 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 9)) AS \"9 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 10)) AS \"10 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 11)) AS \"11 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 12)) AS \"12 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 13)) AS \"13 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 14)) AS \"14 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 15)) AS \"15 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 16)) AS \"16 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 17)) AS \"17 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 18)) AS \"18 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 19)) AS \"19 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 20)) AS \"20 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 21)) AS \"21 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 22)) AS \"22 h\",\n       ROUND(SUM(a.validaciones_promedio) FILTER (WHERE a.hora = 23)) AS \"23 h\"\nFROM analisis_estacion_hora a JOIN top t USING (cod_estacion)\nWHERE a.semana_inicio = '$semana'::date\nGROUP BY a.nombre_estacion, t.c ORDER BY t.c DESC"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 15000,
+          "unit": "locale",
+          "decimals": 0,
+          "color": {
+            "mode": "continuous-YlRd"
+          },
+          "custom": {
+            "align": "center",
+            "cellOptions": {
+              "type": "color-background",
+              "mode": "gradient"
+            },
+            "width": 62
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Estación"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "auto"
+                }
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              },
+              {
+                "id": "custom.width",
+                "value": 230
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      }
+    },
+    {
+      "id": 8,
+      "type": "geomap",
+      "title": "Mapa de estaciones: tamaño = carga sobre el umbral, color = personas en el pico",
+      "description": "",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 12,
+        "h": 13
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT nombre_estacion AS \"Estación\", latitud, longitud, MAX(carga_sobre_umbral) AS carga, MAX(personas_pico) AS personas\nFROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto IS NOT NULL AND latitud IS NOT NULL\nGROUP BY nombre_estacion, latitud, longitud"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 4
+              },
+              {
+                "color": "orange",
+                "value": 6
+              },
+              {
+                "color": "red",
+                "value": 9
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "view": {
+          "id": "coords",
+          "lat": 4.66,
+          "lon": -74.1,
+          "zoom": 11,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": true,
+          "showAttribution": true
+        },
+        "basemap": {
+          "type": "osm-standard",
+          "name": "OpenStreetMap"
+        },
+        "tooltip": {
+          "mode": "details"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "Estaciones",
+            "tooltip": true,
+            "location": {
+              "mode": "coords",
+              "latitude": "latitud",
+              "longitude": "longitud"
+            },
+            "config": {
+              "showLegend": true,
+              "style": {
+                "size": {
+                  "field": "carga",
+                  "min": 4,
+                  "max": 24,
+                  "fixed": 6
+                },
+                "color": {
+                  "field": "personas",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.8,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 9,
+      "type": "barchart",
+      "title": "Perfil horario de la estación elegida",
+      "description": "Elige la estación arriba. La línea roja es el umbral de 1.000 validaciones por hora.",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 27,
+        "w": 12,
+        "h": 13
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "SELECT hora::text AS \"Hora\", ROUND(validaciones_promedio) AS \"Validaciones por hora\"\nFROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND nombre_estacion = '$estacion' ORDER BY hora"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "fixed",
+            "fixedColor": "blue"
+          },
+          "custom": {
+            "fillOpacity": 85,
+            "lineWidth": 0,
+            "thresholdsStyle": {
+              "mode": "line"
+            }
+          },
+          "unit": "locale",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "transparent",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1000
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "orientation": "vertical",
+        "xField": "Hora",
+        "legend": {
+          "showLegend": false
+        },
+        "showValue": "never",
+        "barWidth": 0.85,
+        "groupWidth": 0.85,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      }
+    },
+    {
+      "id": 10,
+      "type": "timeseries",
+      "title": "Evolución del pico de las 5 primeras estaciones, por semana",
+      "description": "Pico por hora de la franja elegida en cada semana cargada (la semana de agosto y la de septiembre).",
+      "datasource": {
+        "type": "grafana-postgresql-datasource",
+        "uid": "rds-transmilenio"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 40,
+        "w": 24,
+        "h": 9
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "grafana-postgresql-datasource",
+            "uid": "rds-transmilenio"
+          },
+          "editorMode": "code",
+          "format": "time_series",
+          "rawQuery": true,
+          "rawSql": "SELECT semana_inicio::timestamp AS time, nombre_estacion AS metric, MAX(pico_franja) AS value\nFROM analisis_estacion_hora\nWHERE franja = '$franja' AND puesto IS NOT NULL\n  AND cod_estacion IN (SELECT cod_estacion FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto <= 5)\nGROUP BY 1, 2 ORDER BY 1"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "locale",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "showPoints": "always",
+            "pointSize": 9,
+            "spanNulls": true,
+            "lineInterpolation": "linear"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      }
+    }
+  ]
+}
