@@ -290,8 +290,8 @@ def validar_archivos(rutas: list[Path], forzar: bool) -> list[Path]:
 def agregar_con_dask(nuevos: list[Path], n_workers: int, memoria: str, forzar: bool) -> list[dict]:
     t0 = time.perf_counter()
     res = procesar_con_dask(nuevos, n_workers, memoria, forzar)
-    get_run_logger().info(f"Dask ({n_workers} workers, {memoria} por worker): {len(res)} archivos, "
-                          f"{sum(r['filas'] for r in res):,} validaciones en {time.perf_counter() - t0:.1f} s".replace(",", "."))
+    validaciones = f"{sum(r['filas'] for r in res):,}".replace(",", ".")
+    get_run_logger().info(f"Dask ({n_workers} workers, {memoria} por worker): {len(res)} archivos, {validaciones} validaciones en {time.perf_counter() - t0:.1f} s")
     return res
 
 
