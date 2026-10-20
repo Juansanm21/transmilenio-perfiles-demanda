@@ -24,7 +24,7 @@ EDA terminado. Flujo de Prefect, carga a AWS y tablero de Grafana funcionando. A
 ## Flujo, base de datos y tablero
 
 ```
-ZIP diarios → exploración con Dask (notebooks 01 a 03: fija las reglas y los parámetros) → [Prefect + Dask: aplica las reglas] → tabla analisis_estacion_hora (AWS RDS PostgreSQL) → Grafana
+ZIP diarios → Dask (Parquet) → limpieza y EDA (notebooks 01 a 03: fija las reglas y los parámetros) → [Prefect + Dask: aplica las reglas a los ZIP nuevos] → tabla analisis_estacion_hora (AWS RDS PostgreSQL) → Grafana, análisis de personal y modelo simple
 ```
 
 - `src/pipeline_transmilenio.py`: flujo de Prefect. Cuando hay una **semana completa** (7 días) que aún no está en la base, la procesa con Dask, calcula el ranking y carga el resultado con *upsert* (si se repite, no duplica). Si no hay semana nueva, termina sin hacer nada.

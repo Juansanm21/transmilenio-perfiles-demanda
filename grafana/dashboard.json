@@ -193,8 +193,8 @@
     {
       "id": 3,
       "type": "stat",
-      "title": "Personas de apoyo en el pico (todas las estaciones)",
-      "description": "Suma de personas simultáneas en el pico de cada estación (pico / 1.500 por persona, hacia arriba).",
+      "title": "Suma de personas en cada pico",
+      "description": "Suma de las personas que necesita cada estación en su propia hora pico (pico / 1.500 por persona, hacia arriba). Los picos ocurren a horas distintas, así que no son personas al mismo tiempo.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "rds-transmilenio"
@@ -789,9 +789,9 @@
     },
     {
       "id": 10,
-      "type": "timeseries",
-      "title": "Evolución del pico de las 5 primeras estaciones, por semana",
-      "description": "Pico por hora de la franja elegida en cada semana cargada (la semana de agosto y la de septiembre).",
+      "type": "barchart",
+      "title": "Pico de las 5 primeras estaciones en cada semana cargada",
+      "description": "Pico por hora de la franja elegida en cada semana cargada; las barras de una misma semana quedan juntas.",
       "datasource": {
         "type": "grafana-postgresql-datasource",
         "uid": "rds-transmilenio"
@@ -810,36 +810,47 @@
             "uid": "rds-transmilenio"
           },
           "editorMode": "code",
-          "format": "time_series",
+          "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT semana_inicio::timestamp AS time, nombre_estacion AS metric, MAX(pico_franja) AS value\nFROM analisis_estacion_hora\nWHERE franja = '$franja' AND puesto IS NOT NULL\n  AND cod_estacion IN (SELECT cod_estacion FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto <= 5)\nGROUP BY 1, 2 ORDER BY 1"
+          "rawSql": "SELECT semana_inicio::text AS \"Semana\", nombre_estacion AS \"Estación\", MAX(pico_franja) AS \"Pico\"\nFROM analisis_estacion_hora\nWHERE franja = '$franja' AND puesto IS NOT NULL\n  AND cod_estacion IN (SELECT cod_estacion FROM analisis_estacion_hora WHERE semana_inicio = '$semana'::date AND franja = '$franja' AND puesto <= 5)\nGROUP BY 1, 2 ORDER BY 1, 3 DESC"
         }
       ],
       "fieldConfig": {
         "defaults": {
           "unit": "locale",
           "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "showPoints": "always",
-            "pointSize": 9,
-            "spanNulls": true,
-            "lineInterpolation": "linear"
+            "fillOpacity": 85,
+            "lineWidth": 0
           }
         },
         "overrides": []
       },
       "options": {
+        "orientation": "vertical",
         "legend": {
           "displayMode": "list",
           "placement": "bottom",
           "showLegend": true
         },
+        "showValue": "never",
+        "barWidth": 0.9,
+        "groupWidth": 0.8,
         "tooltip": {
           "mode": "multi",
           "sort": "desc"
         }
-      }
+      },
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "Estación",
+            "rowField": "Semana",
+            "valueField": "Pico",
+            "emptyValue": "null"
+          }
+        }
+      ]
     }
   ]
 }

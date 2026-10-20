@@ -76,7 +76,7 @@ Todas las cifras de esta ficha salen de los notebooks, del benchmark de Dask, de
 1. Describir cómo se distribuye la demanda de ingreso a lo largo de la semana y del día, y justificar el análisis solo con días hábiles.
 2. Ordenar las estaciones y franjas por demanda y definir, con la operación, el umbral de alta presión (punto de partida: 1.000 validaciones por hora).
 3. Construir un modelo que anticipe la demanda por estación y hora y compararlo con el promedio histórico mediante validación temporal.
-4. Entregar a la gerencia un ranking de estaciones y franjas, con su margen de incertidumbre, y un tablero.
+4. Entregar a la gerencia un ranking de estaciones y franjas y un tablero. El margen de incertidumbre del pico (intervalo del 95 % del promedio de 14 días) se reporta en el análisis del notebook 04.
 
 - **Unidad de análisis:** estación x día x hora (en días hábiles).
 - **Variable objetivo:** `validaciones` (conteo); y su versión binaria "hora de alta presión" (validaciones por encima de un umbral definido con la operación).
@@ -289,7 +289,7 @@ Evidencias: `docs/evidencias/flujo_cargas_por_semana.md` (consulta y registros d
 
 ## 8. Tablero de Grafana (punto g)
 
-`grafana/dashboard.json` (se levanta con `docker compose up -d`). Filtros: semana, franja y estación. Paneles: estaciones en alta presión, pico máximo, personas de apoyo en el pico y carga sobre el umbral; ranking con ventana de refuerzo; las 15 estaciones con más carga; demanda por hora de las 12 estaciones con más carga; mapa de estaciones; perfil horario de la estación elegida; evolución del pico por semana. Capturas a tamaño completo: `docs/evidencias/grafana_tablero_manana_semana_14sep.png` y `docs/evidencias/grafana_tablero_tarde_semana_14sep.png`.
+`grafana/dashboard.json` (se levanta con `docker compose up -d`). Filtros: semana, franja y estación. Paneles: estaciones en alta presión, pico máximo, suma de personas en cada pico y carga sobre el umbral; ranking con ventana de refuerzo; las 15 estaciones con más carga; demanda por hora de las 12 estaciones con más carga; mapa de estaciones; perfil horario de la estación elegida; pico de las cinco primeras estaciones en barras por semana. Capturas a tamaño completo: `docs/evidencias/grafana_tablero_manana_semana_14sep.png` y `docs/evidencias/grafana_tablero_tarde_semana_14sep.png`.
 
 ## 9. Limitaciones (para la sección de conclusiones del documento)
 
