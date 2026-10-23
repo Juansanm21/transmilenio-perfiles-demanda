@@ -1,4 +1,4 @@
-﻿# Proyecto Big Data: TransMilenio (troncal)
+# Proyecto Big Data: TransMilenio (troncal)
 
 Proyecto del curso **Herramientas de Big Data** (Maestría en Analítica). Autores: Juan Pablo Sánchez, William Caro y Leidy Simijaca.
 
@@ -33,7 +33,7 @@ En la punta de la mañana requieren refuerzo, en este orden, Portal Américas, P
 | `02_exploracion_y_limpieza` | Columnas, vacíos, calidad y decisiones de limpieza |
 | `03_eda_demanda_y_patrones` | **El EDA**: días, franjas, estaciones, accesos, perfiles, ida y vuelta, correlaciones e hipótesis |
 | `04_ranking_y_personal_de_apoyo` | Responde la pregunta: umbral y ventana de refuerzo, ranking por franja, tres propuestas de personal (A, B y C), plan por estación, piloto de campo y uso de la holgura de los turnos |
-| `05_modelo_simple` | Modelo simple: lee la tabla de AWS, validación temporal, líneas base y un modelo sencillo |
+| `05_modelo_simple` | Modelo de predicción: lee la tabla de AWS, validación temporal, líneas base y dos modelos de aprendizaje |
 | `anexo_teorema_limite_central` | Verificación del Teorema del Límite Central con la hora de la validación |
 
 Los notebooks se pueden ver ya ejecutados en GitHub; si alguno tarda en cargar, se abre en [nbviewer](https://nbviewer.org/github/Juansanm21/transmilenio-perfiles-demanda/tree/v2/notebooks/).
@@ -43,7 +43,7 @@ Los notebooks se pueden ver ya ejecutados en GitHub; si alguno tarda en cargar, 
 ![Arquitectura](docs/arquitectura.png)
 
 ```
-ZIP diarios → Dask (Parquet) → limpieza y EDA (notebooks 01 a 03: fija las reglas y los parámetros) → [Prefect + Dask: aplica las reglas a los ZIP nuevos] → tabla analisis_estacion_hora (AWS RDS PostgreSQL) → Grafana, análisis de personal y modelo simple
+ZIP diarios → Dask (Parquet) → limpieza y EDA (notebooks 01 a 03: fija las reglas y los parámetros) → [Prefect + Dask: aplica las reglas a los ZIP nuevos] → tabla analisis_estacion_hora (AWS RDS PostgreSQL) → Grafana, análisis de personal y modelo de predicción
 ```
 
 - `src/pipeline_transmilenio.py`: flujo de Prefect. Cuando hay una **semana completa** (7 días) que aún no está en la base, la procesa con Dask, calcula el ranking y carga el resultado con *upsert* (si se repite, no duplica). Si no hay semana nueva, termina sin hacer nada.

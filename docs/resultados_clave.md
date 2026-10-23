@@ -236,7 +236,7 @@ Con una persona por cada 1.500 validaciones por hora (escenario). Las 93 estacio
 - **Supuestos por confirmar con la operación:** capacidad por persona (1.500 validaciones por hora), umbral (1.000), recargo de la hora variable (33 %), relevo (10 %), turno variable de 4 horas y jornada (8 horas, tope de 42 por semana).
 - **Holgura de la propuesta C:** 321 persona-horas por día (25 % de lo pagado): 162 en horas de valle y 159 en horas con necesidad. 3,5 persona-horas por estación en promedio (la mitad, 3 o menos). Cae sobre todo en la bajada de las puntas (67 % en las horas de las puntas, 24 % entre las 9 y las 15 h). Tareas posibles: orientar a la población prioritaria (9,9 % de las validaciones), orientar la personalización de tarjetas (29,2 % anónimas), alistar la siguiente punta y pausas. Figura: `docs/figs/04_holgura_por_hora.png`.
 
-## 5. Modelo simple (notebook 05)
+## 5. Modelo de predicción (notebook 05)
 
 Lee la tabla de AWS. Validación temporal: entrena con la semana del 10 de agosto (historia: 3 de agosto) y prueba con la del 14 de septiembre (historia: las dos de agosto). Métricas en la semana de prueba (3.576 filas; 469 de alta presión, con 1.000 validaciones por hora o más):
 
